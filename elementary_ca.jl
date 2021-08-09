@@ -56,9 +56,10 @@ Initializes the ABM
 # Arguments
 - `n_cells::Int`: total of cell automaton
 - `wolfram_code::Int`: wolfram code for the rule
+- `random_start::Bool`: random start or single cell at center
 - `seed::Int`: random seed
 """
-function build_model(; n_cells = 100, wolfram_code=30, seed = 30)
+function build_model(; n_cells = 101, wolfram_code=30, random_start=true, seed = 30)
     space = GridSpace((n_cells,); metric=:chebyshev)
 
     properties = Dict(:rule => rule_from_code(wolfram_code),)
@@ -66,11 +67,20 @@ function build_model(; n_cells = 100, wolfram_code=30, seed = 30)
         Cell, 
         space; properties,
         rng = MersenneTwister(seed))
-
-    for x in 1:n_cells
-        cell = Cell(nextid(model), (x,), rand([0,1]))
-        add_agent_pos!(cell, model)
-    end
+	
+	if random_start
+		for x in 1:n_cells
+			cell = Cell(nextid(model), (x,), rand([0,1]))
+			add_agent_pos!(cell, model)
+		end
+	else
+		for x in 1:n_cells
+			initial_state = x == div(n_cells, 2) + 1 ? 1 : 0
+			cell = Cell(nextid(model), (x,), initial_state)
+        	add_agent_pos!(cell, model)
+		end
+	end
+    
 
     return model
 end
@@ -97,7 +107,7 @@ function ca_step!(model)
 end
 
 # Initialize model
-model = build_model(n_cells=100, wolfram_code=30)
+model = build_model(n_cells=101, wolfram_code=30, random_start=false)
 
 # Runs the model and collects data
 data, _ = run!(model, cell_step!, ca_step!, 100; adata=[:status]);
@@ -105,7 +115,13 @@ data, _ = run!(model, cell_step!, ca_step!, 100; adata=[:status]);
 # The data contains the step, id/position and status of the cell (1/0)
 data
 
-CSV.write("ca_data.csv", data);
+CSV.write("data/ca_data.csv", data);
 
 # Lets plot the time evolution in the y axis
-heatmap(data.id, data.step, data.status, colormap=:Blues_3)
+function plot_automata(data)
+    fig, ax = heatmap(data.id, data.step, data.status, colormap=:Blues_3)
+    ax.yreversed = true
+    return fig
+end
+
+plot_automata(data)
