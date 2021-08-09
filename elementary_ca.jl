@@ -1,6 +1,6 @@
 # Implementation of an elementary cellular automata
 # according to https://mathworld.wolfram.com/ElementaryCellularAutomaton.html
-# uses random initialization and uses wolfram codes to specify the rule
+# uses random initialization or single cell initialization and uses wolfram codes to specify the rule
 # synchronous update of the 1D lattice
 
 using Agents, Random
